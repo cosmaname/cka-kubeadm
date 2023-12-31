@@ -1,5 +1,9 @@
 name: terraform-checks
 
+on:
+  push:
+    branches: [ main ]
+
 jobs:
   tflint:
     runs-on: ubuntu-latest

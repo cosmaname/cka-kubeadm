@@ -1,5 +1,5 @@
 provider "aws" {
-  region = local.regionn
+  region = local.region
 }
 
 data "aws_availability_zones" "available" {}

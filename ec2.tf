@@ -16,7 +16,7 @@ resource "aws_eip_association" "control" {
 resource "aws_instance" "control" {
   ami           = data.aws_ami.ubuntu.image_id
   instance_type = var.control_instance_type
-  subnet_id     = module.vpc.public_subnets.0
+  subnet_id     = module.vpc.public_subnets[0]
   key_name      = aws_key_pair.ssh.key_name
   vpc_security_group_ids = [
     aws_security_group.egress.id,
@@ -24,11 +24,10 @@ resource "aws_instance" "control" {
     aws_security_group.ingress_k8s.id,
     aws_security_group.ingress_ssh.id
   ]
-  tags = merge(local.tags, { "terraform-kubeadm:node" = "control" })
-  # Saved in: /var/lib/cloud/instances/<instance-id>/user-data.txt [1]
-  # Logs in:  /var/log/cloud-init-output.log [2]
+  tags      = merge(local.tags, { "terraform-kubeadm:node" = "control" })
+  # Saved in: /var/lib/cloud/instances/<instance-id>/user-data.txt
+  # Logs in:  /var/log/cloud-init-output.log
   # [1] https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/user-data.html#user-data-shell-scripts
-  # [2] https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/user-data.html#user-data-shell-scripts
   user_data = templatefile(
     "${path.module}/user-data.tftpl",
     {
@@ -38,6 +37,33 @@ resource "aws_instance" "control" {
       control_public_ip  = aws_eip.control.public_ip,
       control_private_ip = null,
       worker_index      = null,
+      kube_version      = var.kube_version
+    }
+  )
+}
+
+resource "aws_instance" "workers" {
+  count                       = var.num_workers
+  ami                         = data.aws_ami.ubuntu.image_id
+  instance_type               = var.worker_instance_type
+  subnet_id                   = module.vpc.private_subnets[count.index]
+  associate_public_ip_address = false
+  key_name                    = aws_key_pair.ssh.key_name
+  vpc_security_group_ids = [
+    aws_security_group.egress.id,
+    aws_security_group.ingress_internal.id,
+    aws_security_group.ingress_ssh.id
+  ]
+  tags      = merge(local.tags, { "terraform-kubeadm:node" = "worker-${count.index}" })
+  user_data = templatefile(
+    "${path.module}/user-data.tftpl",
+    {
+      node              = "worker",
+      token             = local.token,
+      cidr              = null,
+      control_public_ip  = null,
+      control_private_ip = aws_instance.control.private_ip,
+      worker_index      = count.index,
       kube_version      = var.kube_version
     }
   )

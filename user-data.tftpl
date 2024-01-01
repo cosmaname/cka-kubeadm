@@ -40,31 +40,31 @@ apt-get update
 apt-get install -y kubeadm kubelet kubectl
 apt-mark hold kubelet kubeadm kubectl 
 
-%{ if node == "master" ~}
+%{ if node == "control" ~}
 #------------------------------------------------------------------------------#
-# Master: initialise cluster
+# Control plane: initialise cluster
 #------------------------------------------------------------------------------#
 kubeadm init \
   --token "${token}" \
   --token-ttl 15m \
-  --apiserver-cert-extra-sans "${master_public_ip}" \
+  --apiserver-cert-extra-sans "${control_public_ip}" \
   %{~ if cidr != null ~}
   --pod-network-cidr "${cidr}" \
   %{~ endif ~}
-  --node-name master
+  --node-name control
 
 # Prepare kubeconfig file for downloading
 mkdir /home/ubuntu/.kube
 cp /etc/kubernetes/admin.conf /home/ubuntu/.kube/config
 chown -R ubuntu:ubuntu /home/ubuntu/.kube
-kubectl --kubeconfig /home/ubuntu/.kube/config config set-cluster kubernetes --server "https://${master_public_ip}:6443"
+kubectl --kubeconfig /home/ubuntu/.kube/config config set-cluster kubernetes --server "https://${control_public_ip}:6443"
 %{~ endif ~}
 
 %{~ if node == "worker" ~}
 #------------------------------------------------------------------------------#
 # Worker: join cluster
 #------------------------------------------------------------------------------#
-kubeadm join "${master_private_ip}:6443" \
+kubeadm join "${control_private_ip}:6443" \
   --token "${token}" \
   --discovery-token-unsafe-skip-ca-verification \
   --node-name worker-${worker_index}

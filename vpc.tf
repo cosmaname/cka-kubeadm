@@ -18,8 +18,8 @@ module "vpc" {
   tags = local.tags
 }
 
-# EIP for master node because it must know its public IP during initialisation
-resource "aws_eip" "master" {
+# EIP for control node because it must know its public IP during initialisation
+resource "aws_eip" "control" {
   domain     = "vpc"
   tags       = local.tags
   depends_on = [module.vpc.igw_id]

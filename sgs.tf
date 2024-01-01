@@ -44,7 +44,7 @@ resource "aws_security_group" "ingress_k8s" {
     protocol    = "tcp"
     from_port   = 6443
     to_port     = 6443
-    cidr_blocks = var.allowed_k8s_cidr_blocks
+    cidr_blocks = concat(var.allowed_k8s_cidr_blocks, ["${aws_eip.master.public_ip}/32"])
   }
 }
 

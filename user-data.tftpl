@@ -34,8 +34,8 @@ systemctl restart containerd
 # Install Kubernetes tools
 # https://kubernetes.io/blog/2023/08/15/pkgs-k8s-io-introduction/
 apt-get install -y apt-transport-https
-curl -fsSL https://pkgs.k8s.io/core:/stable:/${kube_version}/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/${kube_version}/deb/ /" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+curl -fsSL https://pkgs.k8s.io/core:/stable:/${kube_version}/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/${kube_version}/deb/ /" | tee /etc/apt/sources.list.d/kubernetes.list
 apt-get update
 apt-get install -y kubeadm kubelet kubectl
 apt-mark hold kubelet kubeadm kubectl 
@@ -53,11 +53,15 @@ kubeadm init \
   %{~ endif ~}
   --node-name control
 
-# Prepare kubeconfig file for downloading
-mkdir /home/ubuntu/.kube
+mkdir -p /home/ubuntu/.kube
 cp /etc/kubernetes/admin.conf /home/ubuntu/.kube/config
-chown -R ubuntu:ubuntu /home/ubuntu/.kube
+chown -R ubuntu /home/ubuntu/.kube
+# Prepare kubeconfig file for downloading
 kubectl --kubeconfig /home/ubuntu/.kube/config config set-cluster kubernetes --server "https://${control_public_ip}:6443"
+
+# Network
+kubectl --kubeconfig=/etc/kubernetes/admin.conf create -f https://raw.githubusercontent.com/projectcalico/calico/${calico_version}/manifests/calico.yaml
+
 %{~ endif ~}
 
 %{~ if node == "worker" ~}

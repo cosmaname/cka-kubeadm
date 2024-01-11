@@ -1,7 +1,19 @@
+variable "private_key_file" {
+  type        = string
+  description = "Filename of the private key of a key pair on your local machine. This key pair will allow to connect to the nodes of the cluster with SSH."
+  default     = "~/.ssh/id_ed25519"
+}
+
 variable "public_key_file" {
   type        = string
   description = "Filename of the public key of a key pair on your local machine. This key pair will allow to connect to the nodes of the cluster with SSH."
   default     = "~/.ssh/id_ed25519.pub"
+}
+
+variable "kubeconfig" {
+  type        = string
+  description = "Name of the kubeconfig file for the created cluster on the local machine. If this is unset, then the kubeconfig file is saved as '<cluster_name>.conf' in the current working directory."
+  default     = null
 }
 
 variable "allowed_ssh_cidr_blocks" {
@@ -32,14 +44,26 @@ variable "num_workers" {
   default     = 2
 }
 
+variable "vpc_network_cidr_block" {
+  type    = string
+  default = "10.0.0.0/16"
+}
+
 variable "pod_network_cidr_block" {
   type        = string
-  description = "**This is an optional variable with a default value of null**. CIDR block for the Pod network of the cluster. If set, Kubernetes automatically allocates Pod subnet IP address ranges to the nodes (i.e. sets the \".spec.podCIDR\" field of the node objects). If null, the cluster is created without an explicitly determined Pod network IP address range, and the nodes are not allocated any Pod subnet IP address ranges (i.e. the \".spec.podCIDR\" field of the nodes is not set)."
-  default     = null
+  description = "**This is an optional variable, can be set to null**. CIDR block for the Pod network of the cluster. If set, Kubernetes automatically allocates Pod subnet IP address ranges to the nodes (i.e. sets the \".spec.podCIDR\" field of the node objects). If null, the cluster is created without an explicitly determined Pod network IP address range, and the nodes are not allocated any Pod subnet IP address ranges (i.e. the \".spec.podCIDR\" field of the nodes is not set)."
+  default     = "172.16.0.0/12"
+  # default = null
 }
 
 variable "kube_version" {
   type        = string
-  description = "K8s release, defaults to smth from 2022"
-  default     = "v1.25"
+  description = "K8s release, defaults to smth from 2023"
+  default     = "v1.28"
+}
+
+variable "calico_version" {
+  type        = string
+  description = "Calico CNI release, defaults to smth from 2023"
+  default     = "v3.26.4"
 }

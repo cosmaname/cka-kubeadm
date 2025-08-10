@@ -1,4 +1,4 @@
-plugin "opentofu" {
+plugin "terraform" {
   enabled = true
   preset  = "recommended"
 }
